@@ -1,0 +1,59 @@
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { DeckList } from "@/components/deck-list"
+import { sql } from "@/lib/db"
+
+export default async function DecksPage() {
+  const decksWithStats = await sql`
+    SELECT 
+      d.id, 
+      d.name, 
+      f.name as format,
+      COUNT(t.id) as tournament_count,
+      COALESCE(SUM(t.wins), 0) as wins,
+      COALESCE(SUM(t.losses), 0) as losses,
+      COALESCE(AVG(t.prize - t.cost), 0) as avg_profit
+    FROM decks d
+    JOIN formats f ON d.format_id = f.id
+    LEFT JOIN tournaments t ON d.id = t.deck_id
+    GROUP BY d.id, d.name, f.name
+    ORDER BY d.name
+  `
+
+  const formattedDecks = decksWithStats.map((deck) => ({
+    id: deck.id,
+    name: deck.name,
+    format: deck.format,
+    tournamentCount: Number.parseInt(deck.tournament_count),
+    wins: Number.parseInt(deck.wins),
+    losses: Number.parseInt(deck.losses),
+    avgProfit: Number.parseFloat(deck.avg_profit),
+  }))
+
+  return (
+    <div className="flex min-h-screen w-full flex-col">
+      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold tracking-tight">Decks</h1>
+          <Link href="/decks/new">
+            <Button>Add Deck</Button>
+          </Link>
+        </div>
+        <div className="flex items-center gap-2">
+          <Input placeholder="Search decks..." className="max-w-sm" />
+          <Button variant="outline">Filter</Button>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>All Decks</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DeckList decks={formattedDecks} />
+          </CardContent>
+        </Card>
+      </main>
+    </div>
+  )
+}
