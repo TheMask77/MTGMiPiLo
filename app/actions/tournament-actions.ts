@@ -1,7 +1,7 @@
 "use server"
 
 import { sql } from "@/lib/db"
-import { parseResult } from "@/lib/db"
+import { parseResult } from "@/lib/utils"
 import { revalidatePath } from "next/cache"
 
 export async function getTournaments() {

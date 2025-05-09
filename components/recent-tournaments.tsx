@@ -2,7 +2,7 @@ import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { formatDistanceToNow } from "date-fns"
-import { calculateProfit, formatResult } from "@/lib/db"
+import { calculateProfit, formatResult } from "@/lib/utils"
 
 interface Tournament {
   id: number
@@ -55,9 +55,9 @@ export function RecentTournaments({ tournaments }: RecentTournamentsProps) {
   )
 }
 
-function getProfitVariant(cost: number, prize: number): "default" | "success" | "destructive" {
+function getProfitVariant(cost: number, prize: number): "default" | "destructive" | "secondary" {
   const profit = calculateProfit(cost, prize)
-  if (profit > 0) return "success"
+  if (profit > 0) return "secondary"
   if (profit < 0) return "destructive"
   return "default"
 }

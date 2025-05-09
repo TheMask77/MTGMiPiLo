@@ -3,24 +3,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { DeckList } from "@/components/deck-list"
-import { sql } from "@/lib/db"
+import { getDecksWithStats } from "@/app/actions/deck-actions" // Import the function for fetching decks
+
 
 export default async function DecksPage() {
-  const decksWithStats = await sql`
-    SELECT 
-      d.id, 
-      d.name, 
-      f.name as format,
-      COUNT(t.id) as tournament_count,
-      COALESCE(SUM(t.wins), 0) as wins,
-      COALESCE(SUM(t.losses), 0) as losses,
-      COALESCE(AVG(t.prize - t.cost), 0) as avg_profit
-    FROM decks d
-    JOIN formats f ON d.format_id = f.id
-    LEFT JOIN tournaments t ON d.id = t.deck_id
-    GROUP BY d.id, d.name, f.name
-    ORDER BY d.name
-  `
+  // Fetch decks using the getDecks function from deck-actions
+  const {success, data: decksWithStats, error} = await getDecksWithStats()
 
   const formattedDecks = decksWithStats.map((deck) => ({
     id: deck.id,

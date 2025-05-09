@@ -108,6 +108,32 @@ export async function getDeckStats(id: number) {
   }
 }
 
+export async function getDecksWithStats() {
+  try {
+    // SQL query to fetch decks along with tournament count, wins, losses, and average profit
+    const decksWithStats = await sql`
+      SELECT 
+        d.id, 
+        d.name, 
+        f.name as format,
+        COUNT(t.id) as tournament_count,
+        COALESCE(SUM(t.wins), 0) as wins,
+        COALESCE(SUM(t.losses), 0) as losses,
+        COALESCE(AVG(t.prize - t.cost), 0) as avg_profit
+      FROM decks d
+      JOIN formats f ON d.format_id = f.id
+      LEFT JOIN tournaments t ON d.id = t.deck_id
+      GROUP BY d.id, d.name, f.name
+      ORDER BY d.name
+    `;
+
+    return { success: true, data: decksWithStats };
+  } catch (error) {
+    console.error("Error fetching decks with stats:", error);
+    return { success: false, error: "Failed to fetch decks with stats" };
+  }
+}
+
 export async function createDeck(formData: FormData) {
   try {
     const name = formData.get("name") as string

@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { calculateWinRate } from "@/lib/db"
+import { calculateWinRate } from "@/lib/utils"
 
 interface Deck {
   id: number

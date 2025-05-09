@@ -9,7 +9,7 @@ export default async function TournamentsPage() {
   const { success, data: tournaments, error } = await getTournaments()
 
   const formattedTournaments = success
-    ? tournaments.map((t) => ({
+    ? (tournaments ?? []).map((t) => ({
         id: t.id,
         type: t.type,
         deck: t.deck,

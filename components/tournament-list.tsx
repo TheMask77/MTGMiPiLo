@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { format } from "date-fns"
-import { calculateProfit, formatResult } from "@/lib/db"
+import { calculateProfit, formatResult } from "@/lib/utils"
 
 interface Tournament {
   id: number
@@ -109,9 +109,9 @@ export function TournamentList({ tournaments }: TournamentListProps) {
   )
 }
 
-function getProfitVariant(cost: number, prize: number): "default" | "success" | "destructive" {
+function getProfitVariant(cost: number, prize: number): "default" | "destructive" | "secondary" {
   const profit = calculateProfit(cost, prize)
-  if (profit > 0) return "success"
+  if (profit > 0) return "secondary"
   if (profit < 0) return "destructive"
   return "default"
 }
