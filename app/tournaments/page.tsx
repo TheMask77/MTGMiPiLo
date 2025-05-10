@@ -18,7 +18,9 @@ export default async function TournamentsPage() {
         cost: Number.parseFloat(t.cost),
         wins: t.wins,
         losses: t.losses,
-        prize: Number.parseFloat(t.prize),
+        prize_play_points: Number.parseFloat(t.prize_play_points),
+        prize_chests: Number.parseFloat(t.prize_chests),
+        prize_qps: Number.parseFloat(t.prize_qps),
       }))
     : []
 

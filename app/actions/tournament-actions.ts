@@ -15,7 +15,9 @@ export async function getTournaments() {
         t.cost, 
         t.wins, 
         t.losses, 
-        t.prize, 
+        t.prize_play_points,
+        t.prize_chests,
+        t.prize_qps,
         t.notes,
         f.name as format
       FROM tournaments t
@@ -63,15 +65,33 @@ export async function getTournamentById(id: number) {
   }
 }
 
+
 export async function createTournament(formData: FormData) {
   try {
+    console.log("Form Data:", formData)
     const tournamentTypeId = Number.parseInt(formData.get("type") as string)
     const deckId = Number.parseInt(formData.get("deck") as string)
     const date = formData.get("date") as string
-    const cost = Number.parseFloat(formData.get("cost") as string)
+
+    // Handle cost and currency
+    const rawCost = formData.get("cost") as string
+
+    // Result parsing and prize logic
     const result = formData.get("result") as string
     const { wins, losses } = parseResult(result)
-    const prize = Number.parseFloat(formData.get("prize") as string)
+
+    const typeNameRecord = await sql`
+      SELECT name FROM tournament_types WHERE id = ${tournamentTypeId}
+    `
+    const typeName = typeNameRecord[0]?.name || ""
+
+    const cost = calculateCost(typeName);
+
+    const prizes = calculatePrize(typeName, wins, losses);
+    const playPointsWon = prizes?.playPoints || 0
+    const chestsWon = prizes?.chests || 0
+    const qpsWon = prizes?.qps || 0
+
     const notes = formData.get("notes") as string
 
     const [newTournament] = await sql`
@@ -82,7 +102,9 @@ export async function createTournament(formData: FormData) {
         cost, 
         wins, 
         losses, 
-        prize, 
+        prize_play_points, 
+        prize_chests,
+        prize_qps,
         notes
       ) 
       VALUES (
@@ -92,7 +114,9 @@ export async function createTournament(formData: FormData) {
         ${cost}, 
         ${wins}, 
         ${losses}, 
-        ${prize}, 
+        ${playPointsWon},
+        ${chestsWon},
+        ${qpsWon}, 
         ${notes}
       )
       RETURNING id
@@ -107,6 +131,65 @@ export async function createTournament(formData: FormData) {
     return { success: false, error: "Failed to create tournament" }
   }
 }
+
+function calculateCost(typeName: string): number {
+  typeName = typeName.toLowerCase();
+  var cost = 0;
+  if (typeName.includes("league")) {
+    cost = 100; // 10 Event Tickets
+  } else if (typeName.includes("preliminary")) {
+    cost = 200; // 20 Event Tickets
+  } else if (typeName.includes("challenge")) {
+    if (typeName.includes("32")) {
+      cost = 250; // 25 Event Tickets
+    }
+    if (typeName.includes("64")) {
+      cost = 300; // 30 Event Tickets
+    }
+  } else {
+    cost = 0; // Default or unknown type
+  }
+
+  return cost;
+}
+
+function calculatePrize(typeName: string, wins: number, losses: number): Record<string, number> | undefined {
+  typeName = typeName.toLowerCase();
+  if (typeName.includes("league")) {
+    // Constructed League prize structure
+    const prizeTableLeagues: Record<number, { playPoints: number; chests: number; qps: number }> = {
+      5: { playPoints: 150, chests: 10, qps: 3 },
+      4: { playPoints: 120, chests: 5, qps: 2 },
+      3: { playPoints: 100, chests: 1, qps: 1 },
+      2: { playPoints: 0, chests: 0, qps: 0 },
+      1: { playPoints: 0, chests: 0, qps: 0 },
+      0: { playPoints: 0, chests: 0, qps: 0 },
+    };
+    return prizeTableLeagues[Math.min(wins, 5)] || { playPoints: 0, chests: 0, qps: 0 };
+  }
+
+  return { tix: 0, chests: 0, qps: 0 }; // Default return value
+  /*
+  } else if (typeName.includes("preliminary")) {
+    // Constructed Preliminary prize structure
+    const prizeTablePrelim: Record<number, number> = {
+      4: 400,
+      3: 200,
+      2: 100,
+      1: 0,
+      0: 0,
+    };
+    return prizeTablePrelim[Math.min(wins, 4)] || 0;
+  } else if (typeName.includes("challenge")) {
+    // Challenge events have varying prize structures; implement as needed
+    // For simplicity, return a placeholder value
+    return 0;
+  } else {
+    return 0; // Default or unknown type
+  }
+    */
+}
+
 
 export async function updateTournament(id: number, formData: FormData) {
   try {
@@ -175,7 +258,7 @@ export async function getDashboardStats() {
     const [totalSpent] = await sql`SELECT COALESCE(SUM(cost), 0) as total FROM tournaments`
 
     // Get total prizes
-    const [totalPrizes] = await sql`SELECT COALESCE(SUM(prize), 0) as total FROM tournaments`
+    const [totalPrizes] = await sql`SELECT COALESCE(SUM(prize_play_points), 0) as total FROM tournaments`
 
     // Get monthly stats for the last 6 months
     const monthlyStats = await sql`
@@ -190,7 +273,7 @@ export async function getDashboardStats() {
         to_char(months.month, 'Mon') as name,
         COALESCE(SUM(t.wins), 0) as wins,
         COALESCE(SUM(t.losses), 0) as losses,
-        COALESCE(SUM(t.prize - t.cost), 0) as profit
+        COALESCE(SUM(t.prize_play_points - t.cost), 0) as profit
       FROM months
       LEFT JOIN tournaments t ON 
         date_trunc('month', t.date) = months.month

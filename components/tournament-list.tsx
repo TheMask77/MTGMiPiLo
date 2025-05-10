@@ -17,7 +17,9 @@ interface Tournament {
   cost: number
   wins: number
   losses: number
-  prize: number
+  prize_play_points: number
+  prize_chests: number
+  prize_qps: number
 }
 
 interface TournamentListProps {
@@ -35,8 +37,8 @@ export function TournamentList({ tournaments }: TournamentListProps) {
         : new Date(b.date).getTime() - new Date(a.date).getTime()
     }
     if (sortColumn === "profit") {
-      const profitA = calculateProfit(a.cost, a.prize)
-      const profitB = calculateProfit(b.cost, b.prize)
+      const profitA = calculateProfit(a.cost, a.prize_play_points)
+      const profitB = calculateProfit(b.cost, b.prize_play_points)
       return sortDirection === "asc" ? profitA - profitB : profitB - profitA
     }
     return 0
@@ -85,12 +87,12 @@ export function TournamentList({ tournaments }: TournamentListProps) {
                 <TableCell>{tournament.deck}</TableCell>
                 <TableCell>{tournament.format}</TableCell>
                 <TableCell>{format(new Date(tournament.date), "MMM d, yyyy")}</TableCell>
-                <TableCell>${tournament.cost.toFixed(2)}</TableCell>
+                <TableCell>PP {tournament.cost.toFixed(2)}</TableCell>
                 <TableCell>{formatResult(tournament.wins, tournament.losses)}</TableCell>
-                <TableCell>${tournament.prize.toFixed(2)}</TableCell>
+                <TableCell>PP {tournament.prize_play_points.toFixed(2)}</TableCell>
                 <TableCell>
-                  <Badge variant={getProfitVariant(tournament.cost, tournament.prize)}>
-                    {getProfitLabel(tournament.cost, tournament.prize)}
+                  <Badge variant={getProfitVariant(tournament.cost, tournament.prize_play_points)}>
+                    {getProfitLabel(tournament.cost, tournament.prize_play_points)}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
@@ -118,7 +120,7 @@ function getProfitVariant(cost: number, prize: number): "default" | "destructive
 
 function getProfitLabel(cost: number, prize: number): string {
   const profit = calculateProfit(cost, prize)
-  if (profit > 0) return `+$${profit.toFixed(2)}`
-  if (profit < 0) return `-$${Math.abs(profit).toFixed(2)}`
+  if (profit > 0) return `+PP ${profit.toFixed(2)}`
+  if (profit < 0) return `-PP ${Math.abs(profit).toFixed(2)}`
   return "Break Even"
 }
