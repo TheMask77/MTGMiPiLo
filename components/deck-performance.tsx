@@ -20,14 +20,12 @@ interface DeckPerformanceProps {
 }
 
 export function DeckPerformance({ data }: DeckPerformanceProps) {
-  console.log("DeckPerformance data:", data)
-
   const cleanedData = data.map((d) => ({
     ...d,
     value: Number(d.value),
     winRate: Number(d.winRate),
   }))
-
+  
   cleanedData.forEach((entry) => {
     if (typeof entry.name !== "string" || typeof entry.value !== "number") {
       console.warn("Invalid entry in data:", entry)
@@ -38,10 +36,10 @@ export function DeckPerformance({ data }: DeckPerformanceProps) {
   const colors = cleanedData.map(
     (_, index) => schemeDark2[index % schemeDark2.length]
   )
-
   return (
     <ResponsiveContainer width="100%" height={300}>
       <PieChart>
+
         <Pie
           data={cleanedData}
           cx="50%"
@@ -59,6 +57,7 @@ export function DeckPerformance({ data }: DeckPerformanceProps) {
             <Cell key={`cell-${index}`} fill={colors[index]} />
           ))}
         </Pie>
+        
         <Tooltip
           formatter={(value, name) => {
             if (name === "value")

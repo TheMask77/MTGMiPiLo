@@ -8,7 +8,7 @@ import { Toaster } from "@/components/toaster"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "MtGO League Tracker",
+  title: "MtGO League Tracker - made with love",
   description: "Track your Magic: The Gathering Online tournaments, decks, costs, and prizes",
     generator: 'v0.dev'
 }
