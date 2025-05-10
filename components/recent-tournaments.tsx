@@ -12,7 +12,7 @@ interface Tournament {
   cost: number
   wins: number
   losses: number
-  prize: number
+  prize_play_points: number
 }
 
 interface RecentTournamentsProps {
@@ -20,6 +20,7 @@ interface RecentTournamentsProps {
 }
 
 export function RecentTournaments({ tournaments }: RecentTournamentsProps) {
+  console.log("RecentTournaments", tournaments)
   return (
     <div className="space-y-4">
       {tournaments.length === 0 ? (
@@ -32,8 +33,8 @@ export function RecentTournaments({ tournaments }: RecentTournamentsProps) {
                 <div className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="font-medium">{tournament.type}</div>
-                    <Badge variant={getProfitVariant(tournament.cost, tournament.prize)}>
-                      {getProfitLabel(tournament.cost, tournament.prize)}
+                    <Badge variant={getProfitVariant(tournament.cost, tournament.prize_play_points)}>
+                      {getProfitLabel(tournament.cost, tournament.prize_play_points)}
                     </Badge>
                   </div>
                   <div className="text-sm text-muted-foreground mt-1">
@@ -42,7 +43,7 @@ export function RecentTournaments({ tournaments }: RecentTournamentsProps) {
                   <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
                     <div>{formatDistanceToNow(new Date(tournament.date), { addSuffix: true })}</div>
                     <div>
-                      Cost: ${tournament.cost.toFixed(2)} • Prize: ${tournament.prize.toFixed(2)}
+                      Cost: PP {tournament.cost.toFixed(0)} • Prize: PP {tournament.prize_play_points.toFixed(0)}
                     </div>
                   </div>
                 </div>
@@ -64,7 +65,7 @@ function getProfitVariant(cost: number, prize: number): "default" | "destructive
 
 function getProfitLabel(cost: number, prize: number): string {
   const profit = calculateProfit(cost, prize)
-  if (profit > 0) return `+$${profit.toFixed(2)}`
-  if (profit < 0) return `-$${Math.abs(profit).toFixed(2)}`
+  if (profit > 0) return `+PP ${profit.toFixed(2)}`
+  if (profit < 0) return `-PP ${Math.abs(profit).toFixed(2)}`
   return "Break Even"
 }

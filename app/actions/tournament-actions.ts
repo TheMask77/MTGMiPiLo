@@ -47,7 +47,9 @@ export async function getTournamentById(id: number) {
         t.cost, 
         t.wins, 
         t.losses, 
-        t.prize, 
+        t.prize_play_points,
+        t.prize_chests,
+        t.prize_qps,
         t.notes,
         f.name as format,
         f.id as format_id
@@ -189,7 +191,6 @@ function calculatePrize(typeName: string, wins: number, losses: number): Record<
   }
     */
 }
-
 
 export async function updateTournament(id: number, formData: FormData) {
   try {
