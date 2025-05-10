@@ -88,7 +88,7 @@ function getProfitVariant(profit: number): "default" | "success" | "destructive"
 }
 
 function getProfitLabel(profit: number): string {
-  if (profit > 0) return `+$${profit.toFixed(2)}`
-  if (profit < 0) return `-$${Math.abs(profit).toFixed(2)}`
-  return "$0.00"
+  if (profit > 0) return `+PP ${profit.toFixed(0)}`
+  if (profit < 0) return `-PP ${Math.abs(profit).toFixed(0)}`
+  return "PP 0"
 }

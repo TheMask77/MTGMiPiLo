@@ -81,7 +81,7 @@ export async function getDeckStats(id: number) {
         t.cost, 
         t.wins, 
         t.losses, 
-        t.prize
+        t.prize_play_points
       FROM tournaments t
       JOIN tournament_types tt ON t.tournament_type_id = tt.id
       WHERE t.deck_id = ${id}
@@ -119,7 +119,7 @@ export async function getDecksWithStats() {
         COUNT(t.id) as tournament_count,
         COALESCE(SUM(t.wins), 0) as wins,
         COALESCE(SUM(t.losses), 0) as losses,
-        COALESCE(AVG(t.prize - t.cost), 0) as avg_profit
+        COALESCE(AVG(t.prize_play_points - t.cost), 0) as avg_profit
       FROM decks d
       JOIN formats f ON d.format_id = f.id
       LEFT JOIN tournaments t ON d.id = t.deck_id
@@ -223,6 +223,7 @@ export async function getDeckPerformance() {
         SELECT 
           d.id,
           d.name,
+          f.name AS format,
           COUNT(t.id) as tournament_count,
           COALESCE(SUM(t.wins), 0) as total_wins,
           COALESCE(SUM(t.losses), 0) as total_losses,
@@ -232,14 +233,16 @@ export async function getDeckPerformance() {
             ELSE 0
           END as win_rate
         FROM decks d
+        JOIN formats f ON d.format_id = f.id
         LEFT JOIN tournaments t ON d.id = t.deck_id
-        GROUP BY d.id, d.name
+        GROUP BY d.id, d.name, f.name
         HAVING COUNT(t.id) > 0
         ORDER BY tournament_count DESC
       )
       SELECT 
         id,
         name,
+        format,
         tournament_count as value,
         win_rate as winRate
       FROM deck_stats

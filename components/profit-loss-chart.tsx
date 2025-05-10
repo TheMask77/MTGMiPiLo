@@ -21,7 +21,7 @@ export function ProfitLossChart({ data }: ProfitLossChartProps) {
           axisLine={false}
           tickFormatter={(value) => `$${value}`}
         />
-        <Tooltip formatter={(value) => [`$${value}`, "Profit/Loss"]} />
+        <Tooltip formatter={(value) => [`PP ${value}`, "Profit/Loss"]} />
         <Line type="monotone" dataKey="profit" stroke="#8884d8" activeDot={{ r: 8 }} strokeWidth={2} />
       </LineChart>
     </ResponsiveContainer>

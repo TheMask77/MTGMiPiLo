@@ -23,7 +23,7 @@ export default async function Dashboard() {
         cost: Number.parseFloat(t.cost),
         wins: t.wins,
         losses: t.losses,
-        prize: Number.parseFloat(t.prize),
+        prize_play_points: Number.parseFloat(t.prize_play_points),
       }))
     : []
 
@@ -58,7 +58,7 @@ export default async function Dashboard() {
               <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${statsSuccess ? stats.totalSpent.toFixed(2) : "0.00"}</div>
+              <div className="text-2xl font-bold">PP {statsSuccess ? stats.totalSpent.toFixed(0) : "0.00"}</div>
             </CardContent>
           </Card>
           <Card>
@@ -66,7 +66,7 @@ export default async function Dashboard() {
               <CardTitle className="text-sm font-medium">Total Prizes</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${statsSuccess ? stats.totalPrizes.toFixed(2) : "0.00"}</div>
+              <div className="text-2xl font-bold">PP {statsSuccess ? stats.totalPrizes.toFixed(0) : "0.00"}</div>
             </CardContent>
           </Card>
         </div>

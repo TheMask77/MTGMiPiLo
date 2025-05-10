@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -35,11 +34,10 @@ export function NewTournamentForm({ decks, tournamentTypes }: NewTournamentFormP
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     type: "",
+    format: "",
     deck: "",
     date: new Date().toISOString().split("T")[0],
-    cost: "",
     result: "",
-    prize: "",
     notes: "",
   })
 
@@ -50,6 +48,30 @@ export function NewTournamentForm({ decks, tournamentTypes }: NewTournamentFormP
 
   const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const isLeague = () => {
+    const selectedType = tournamentTypes.find((t) => t.id.toString() === formData.type)
+    return selectedType?.name.toLowerCase().includes("league")
+  }
+
+  const calculateLeaguePrize = (result: string) => {
+    const match = result.match(/^(\d+)-(\d+)$/)
+    if (!match) return null
+
+    const wins = parseInt(match[1])
+    const prizeTableLeagues: Record<number, { playPoints: number; chests: number; qps: number }> = {
+      5: { playPoints: 150, chests: 11, qps: 5 },
+      4: { playPoints: 120, chests: 5, qps: 2 },
+      3: { playPoints: 100, chests: 1, qps: 1 },
+      2: { playPoints: 50, chests: 0, qps: 0 },
+      1: { playPoints: 0, chests: 0, qps: 0 },
+      0: { playPoints: 0, chests: 0, qps: 0 },
+    }
+
+    const prize = prizeTableLeagues[Math.min(wins, 5)]
+    const usdEstimate = prize.playPoints * 0.01 + prize.chests * 2.5
+    return usdEstimate.toFixed(2)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -88,12 +110,14 @@ export function NewTournamentForm({ decks, tournamentTypes }: NewTournamentFormP
     }
   }
 
+  const availableFormats = [...new Set(decks.map((deck) => deck.format))]
+
   return (
     <Card>
       <form onSubmit={handleSubmit}>
         <CardHeader>
           <CardTitle>Add New Tournament</CardTitle>
-          <CardDescription>Record a new tournament you've played in MtGO</CardDescription>
+          <CardDescription>Record a new tournament you've played in MTGO</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -118,54 +142,74 @@ export function NewTournamentForm({ decks, tournamentTypes }: NewTournamentFormP
                 </SelectContent>
               </Select>
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="deck">Deck Used</Label>
-              <Select onValueChange={(value) => handleSelectChange("deck", value)} required>
-                <SelectTrigger id="deck">
-                  <SelectValue placeholder="Select deck" />
+              <Label htmlFor="format">Tournament Format</Label>
+              <Select
+                onValueChange={(value) => {
+                  handleSelectChange("format", value)
+                  handleSelectChange("deck", "") // Reset deck when format changes
+                }}
+                required
+              >
+                <SelectTrigger id="format">
+                  <SelectValue placeholder="Select format" />
                 </SelectTrigger>
                 <SelectContent>
-                  {decks.length === 0 ? (
+                  {availableFormats.length === 0 ? (
                     <SelectItem value="" disabled>
-                      No decks available
+                      No formats available
                     </SelectItem>
                   ) : (
-                    decks.map((deck) => (
-                      <SelectItem key={deck.id} value={deck.id.toString()}>
-                        {deck.name} ({deck.format})
+                    availableFormats.map((format) => (
+                      <SelectItem key={format} value={format}>
+                        {format}
                       </SelectItem>
                     ))
                   )}
-                  <SelectItem value="add_new">
-                    <Link href="/decks/new" className="flex w-full">
-                      + Add New Deck
-                    </Link>
-                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="deck">Deck Used</Label>
+            <Select
+              value={formData.deck}
+              onValueChange={(value) => handleSelectChange("deck", value)}
+              required
+            >
+              <SelectTrigger id="deck">
+                <SelectValue placeholder={formData.format ? "Select deck" : "Select format first"} />
+              </SelectTrigger>
+              <SelectContent>
+                {formData.format === "" ? (
+                  <SelectItem value="Modern" disabled>
+                    Select a format first
+                  </SelectItem>
+                ) : (
+                  decks
+                    .filter((deck) => deck.format === formData.format)
+                    .map((deck) => (
+                      <SelectItem key={deck.id} value={deck.id.toString()}>
+                        {deck.name}
+                      </SelectItem>
+                    ))
+                )}
+                <SelectItem value="add_new">
+                  <Link href="/decks/new" className="flex w-full">
+                    + Add New Deck
+                  </Link>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="date">Date</Label>
               <Input id="date" name="date" type="date" value={formData.date} onChange={handleChange} required />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="cost">Entry Cost ($)</Label>
-              <Input
-                id="cost"
-                name="cost"
-                type="number"
-                placeholder="8.00"
-                min="0"
-                step="0.01"
-                value={formData.cost}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="result">Result (W-L)</Label>
               <Input
@@ -177,21 +221,8 @@ export function NewTournamentForm({ decks, tournamentTypes }: NewTournamentFormP
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="prize">Prize Value ($)</Label>
-              <Input
-                id="prize"
-                name="prize"
-                type="number"
-                placeholder="12.00"
-                min="0"
-                step="0.01"
-                value={formData.prize}
-                onChange={handleChange}
-                required
-              />
-            </div>
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="notes">Notes (Optional)</Label>
             <Textarea
