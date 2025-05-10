@@ -236,7 +236,6 @@ export async function getDeckPerformance() {
         GROUP BY d.id, d.name
         HAVING COUNT(t.id) > 0
         ORDER BY tournament_count DESC
-        LIMIT 5
       )
       SELECT 
         id,

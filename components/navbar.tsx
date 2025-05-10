@@ -44,11 +44,6 @@ export function Navbar() {
             Decks
           </Link>
         </nav>
-        <div className="ml-auto flex items-center space-x-4">
-          <Link href="/tournaments/new">
-            <Button>Add Tournament</Button>
-          </Link>
-        </div>
       </div>
     </div>
   )
