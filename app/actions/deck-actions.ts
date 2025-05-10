@@ -119,7 +119,7 @@ export async function getDecksWithStats() {
         COUNT(t.id) as tournament_count,
         COALESCE(SUM(t.wins), 0) as wins,
         COALESCE(SUM(t.losses), 0) as losses,
-        COALESCE(AVG(t.prize - t.cost), 0) as avg_profit
+        COALESCE(AVG(t.prize_play_points - t.cost), 0) as avg_profit
       FROM decks d
       JOIN formats f ON d.format_id = f.id
       LEFT JOIN tournaments t ON d.id = t.deck_id
