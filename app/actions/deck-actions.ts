@@ -81,7 +81,7 @@ export async function getDeckStats(id: number) {
         t.cost, 
         t.wins, 
         t.losses, 
-        t.prize
+        t.prize_play_points
       FROM tournaments t
       JOIN tournament_types tt ON t.tournament_type_id = tt.id
       WHERE t.deck_id = ${id}
