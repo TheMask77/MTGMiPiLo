@@ -1,6 +1,14 @@
 "use client"
 
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip, Legend } from "recharts"
+import {
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  Legend,
+} from "recharts"
+import { schemeDark2 } from "d3-scale-chromatic"
 
 interface DeckPerformanceProps {
   data: {
@@ -11,15 +19,23 @@ interface DeckPerformanceProps {
   }[]
 }
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#FF5733"]
-
 export function DeckPerformance({ data }: DeckPerformanceProps) {
   const cleanedData = data.map((d) => ({
     ...d,
     value: Number(d.value),
     winRate: Number(d.winRate),
   }))
+  
+  cleanedData.forEach((entry) => {
+    if (typeof entry.name !== "string" || typeof entry.value !== "number") {
+      console.warn("Invalid entry in data:", entry)
+    }
+  })
 
+  // Generate colors (cycle through d3's schemeCategory10 if more are needed)
+  const colors = cleanedData.map(
+    (_, index) => schemeDark2[index % schemeDark2.length]
+  )
   return (
     <ResponsiveContainer width="100%" height={300}>
       <PieChart>
@@ -33,21 +49,23 @@ export function DeckPerformance({ data }: DeckPerformanceProps) {
           fill="#8884d8"
           dataKey="value"
           nameKey="name"
-          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+          label={({ name, percent }) =>
+            `${name}: ${(percent * 100).toFixed(0)}%`
+          }
         >
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+          {cleanedData.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={colors[index]} />
           ))}
         </Pie>
         
         <Tooltip
-          formatter={(value, name, props) => {
-            if (name === "value") return [`${value} tournaments`, "Tournaments Played"]
+          formatter={(value, name) => {
+            if (name === "value")
+              return [`${value} tournaments`, "Tournaments Played"]
             if (name === "winRate") return [`${value}%`, "Win Rate"]
             return [value, name]
           }}
         />
-        <Legend />
       </PieChart>
     </ResponsiveContainer>
   )
