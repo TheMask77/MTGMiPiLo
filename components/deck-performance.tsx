@@ -14,11 +14,18 @@ interface DeckPerformanceProps {
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#FF5733"]
 
 export function DeckPerformance({ data }: DeckPerformanceProps) {
+  const cleanedData = data.map((d) => ({
+    ...d,
+    value: Number(d.value),
+    winRate: Number(d.winRate),
+  }))
+
   return (
     <ResponsiveContainer width="100%" height={300}>
       <PieChart>
+
         <Pie
-          data={data}
+          data={cleanedData}
           cx="50%"
           cy="50%"
           labelLine={false}
@@ -32,6 +39,7 @@ export function DeckPerformance({ data }: DeckPerformanceProps) {
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
         </Pie>
+        
         <Tooltip
           formatter={(value, name, props) => {
             if (name === "value") return [`${value} tournaments`, "Tournaments Played"]
