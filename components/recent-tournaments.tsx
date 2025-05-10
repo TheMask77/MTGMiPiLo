@@ -20,7 +20,6 @@ interface RecentTournamentsProps {
 }
 
 export function RecentTournaments({ tournaments }: RecentTournamentsProps) {
-  console.log("RecentTournaments", tournaments)
   return (
     <div className="space-y-4">
       {tournaments.length === 0 ? (
