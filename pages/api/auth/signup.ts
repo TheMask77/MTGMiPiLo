@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { sql } from "@/lib/db";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
