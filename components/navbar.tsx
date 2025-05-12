@@ -51,9 +51,14 @@ export function Navbar() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center space-x-6 mx-6">
-          {navLinks}
-        </nav>
+        <div className="hidden md:flex items-center space-x-6 mx-6">
+          <nav className="flex items-center space-x-6">
+            {navLinks}
+          </nav>
+          <Link href="/login">
+            <Button variant="outline" size="sm">Log In</Button>
+          </Link>
+        </div>
 
         {/* Mobile menu button */}
         <button
@@ -69,6 +74,9 @@ export function Navbar() {
       {isOpen && (
         <div className="md:hidden px-4 pb-4 space-y-2">
           {navLinks}
+          <Link href="/login">
+            <Button variant="outline" className="w-full">Log In</Button>
+          </Link>
         </div>
       )}
     </div>
