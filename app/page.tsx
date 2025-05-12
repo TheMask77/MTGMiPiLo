@@ -8,6 +8,7 @@ import { ProfitLossChart } from "@/components/profit-loss-chart"
 import { getDashboardStats } from "@/app/actions/tournament-actions"
 import { getDeckPerformance } from "@/app/actions/deck-actions"
 import { getTournaments } from "@/app/actions/tournament-actions"
+import { format } from "path"
 
 export default async function Dashboard() {
   const { success: statsSuccess, data: stats, error: statsError } = await getDashboardStats()
@@ -24,6 +25,7 @@ export default async function Dashboard() {
         wins: t.wins,
         losses: t.losses,
         prize_play_points: Number.parseFloat(t.prize_play_points),
+        format: t.format,
       }))
     : []
 

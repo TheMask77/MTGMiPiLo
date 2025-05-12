@@ -7,6 +7,7 @@ import { calculateProfit, formatResult } from "@/lib/utils"
 interface Tournament {
   id: number
   type: string
+  format: string
   deck: string
   date: string
   cost: number
@@ -31,7 +32,7 @@ export function RecentTournaments({ tournaments }: RecentTournamentsProps) {
               <CardContent className="p-0">
                 <div className="p-4">
                   <div className="flex items-center justify-between">
-                    <div className="font-medium">{tournament.type}</div>
+                    <div className="font-medium">{tournament.format} {tournament.type}</div>
                     <Badge variant={getProfitVariant(tournament.cost, tournament.prize_play_points)}>
                       {getProfitLabel(tournament.cost, tournament.prize_play_points)}
                     </Badge>
