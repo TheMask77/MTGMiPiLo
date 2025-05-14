@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model decks {
+  id          Int           @id @default(autoincrement())
+  name        String        @db.VarChar(100)
+  format_id   Int?
+  description String?
+  created_at  DateTime?     @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime?     @default(now()) @db.Timestamptz(6)
+  formats     formats?      @relation(fields: [format_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tournaments tournaments[]
+
+  @@index([format_id], map: "idx_decks_format_id")
+}
+
+model formats {
+  id         Int       @id @default(autoincrement())
+  name       String    @unique @db.VarChar(50)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  decks      decks[]
+}
+
+model tournament_types {
+  id          Int           @id @default(autoincrement())
+  name        String        @unique @db.VarChar(100)
+  created_at  DateTime?     @default(now()) @db.Timestamptz(6)
+  tournaments tournaments[]
+}
+
+model tournaments {
+  id                 Int               @id @default(autoincrement())
+  tournament_type_id Int?
+  deck_id            Int?
+  date               DateTime          @db.Date
+  cost               Decimal           @db.Decimal(10, 2)
+  wins               Int
+  losses             Int
+  notes              String?
+  created_at         DateTime?         @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?         @default(now()) @db.Timestamptz(6)
+  prize_play_points  Int?              @default(0)
+  prize_chests       Int?              @default(0)
+  prize_qps          Int?              @default(0)
+  decks              decks?            @relation(fields: [deck_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tournament_types   tournament_types? @relation(fields: [tournament_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([date], map: "idx_tournaments_date")
+  @@index([deck_id], map: "idx_tournaments_deck_id")
+}
+
+model users {
+  id              Int     @id @default(autoincrement())
+  username        String?
+  email           String  @unique
+  email_verified  String?
+  hashed_password String?
+  image           String?
+}
