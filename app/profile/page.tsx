@@ -3,21 +3,31 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+type User = {
+  username: string
+  email: string
+}
+
 export default function ProfilePage() {
   const router = useRouter()
-  const [user, setUser] = useState<{ username: string; email: string } | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch('/api/auth/me') // You'll need to create this endpoint
-        if (!res.ok) throw new Error('Unauthorized')
+        const res = await fetch('/api/auth/me')
+
+        if (!res.ok) {
+          throw new Error('You are not authorized to view this page.')
+        }
 
         const data = await res.json()
         setUser(data)
-      } catch (err) {
-        router.push('/login') // redirect to login if not authenticated
+      } catch (err: any) {
+        setError(err.message)
+        router.push('/login')
       } finally {
         setLoading(false)
       }
@@ -26,18 +36,40 @@ export default function ProfilePage() {
     fetchUser()
   }, [router])
 
-  if (loading) return <p className="text-center mt-10">Loading...</p>
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' })
+    router.push('/login')
+  }
+
+  if (loading) {
+    return (
+      <div className="text-center mt-20 text-gray-600">
+        <p>Loading profile...</p>
+      </div>
+    )
+  }
 
   return (
-    <div className="max-w-xl mx-auto mt-10 p-6 border rounded shadow">
-      <h1 className="text-2xl font-bold mb-4">Profile</h1>
-      {user ? (
-        <div className="space-y-2">
-          <p><strong>Username:</strong> {user.username}</p>
-          <p><strong>Email:</strong> {user.email}</p>
+    <div className="max-w-xl mx-auto mt-10 p-6 border border-gray-200 rounded-lg shadow-sm bg-white">
+      <h1 className="text-3xl font-semibold mb-6 text-gray-800">Your Profile</h1>
+
+      {error ? (
+        <p className="text-red-600">{error}</p>
+      ) : user ? (
+        <div className="space-y-4 text-gray-700">
+          <div>
+            <p className="text-sm text-gray-500">Username</p>
+            <p className="text-lg font-medium">{user.username}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Email</p>
+            <p className="text-lg font-medium">{user.email}</p>
+          </div>
+
+          <hr className="my-4" />
         </div>
       ) : (
-        <p>User not found.</p>
+        <p className="text-gray-500">User data not found.</p>
       )}
     </div>
   )
