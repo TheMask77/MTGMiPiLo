@@ -3,6 +3,8 @@
 import { sql } from "@/lib/db"
 import { parseResult } from "@/lib/utils"
 import { revalidatePath } from "next/cache"
+import { prisma } from "@/lib/db";
+import { cookies } from "next/headers";
 
 export async function getTournaments() {
   try {
@@ -70,67 +72,58 @@ export async function getTournamentById(id: number) {
 
 export async function createTournament(formData: FormData) {
   try {
-    console.log("Form Data:", formData)
-    const tournamentTypeId = Number.parseInt(formData.get("type") as string)
-    const deckId = Number.parseInt(formData.get("deck") as string)
-    const date = formData.get("date") as string
+    // Get user ID from cookie
+    const cookieStore = await cookies();
+    const userId = cookieStore.get("user_id")?.value;
+    if (!userId) {
+      return { success: false, error: "Not authenticated" };
+    }
 
-    // Handle cost and currency
-    const rawCost = formData.get("cost") as string
+    // Parse form data as before
+    const tournamentTypeId = Number.parseInt(formData.get("type") as string);
+    const deckId = Number.parseInt(formData.get("deck") as string);
+    const date = formData.get("date") as string;
+    const result = formData.get("result") as string;
+    const { wins, losses } = parseResult(result);
 
-    // Result parsing and prize logic
-    const result = formData.get("result") as string
-    const { wins, losses } = parseResult(result)
-
-    const typeNameRecord = await sql`
-      SELECT name FROM tournament_types WHERE id = ${tournamentTypeId}
-    `
-    const typeName = typeNameRecord[0]?.name || ""
+    const typeNameRecord = await prisma.tournament_types.findUnique({
+      where: { id: tournamentTypeId },
+      select: { name: true },
+    });
+    const typeName = typeNameRecord?.name || "";
 
     const cost = calculateCost(typeName);
-
     const prizes = calculatePrize(typeName, wins, losses);
-    const playPointsWon = prizes?.playPoints || 0
-    const chestsWon = prizes?.chests || 0
-    const qpsWon = prizes?.qps || 0
+    const playPointsWon = prizes?.playPoints || 0;
+    const chestsWon = prizes?.chests || 0;
+    const qpsWon = prizes?.qps || 0;
+    const notes = formData.get("notes") as string;
 
-    const notes = formData.get("notes") as string
+    // Create tournament with Prisma
+    const newTournament = await prisma.tournaments.create({
+      data: {
+        tournament_type_id: tournamentTypeId,
+        deck_id: deckId,
+        date: new Date(date),
+        cost,
+        wins,
+        losses,
+        prize_play_points: playPointsWon,
+        prize_chests: chestsWon,
+        prize_qps: qpsWon,
+        notes,
+        user_id: Number(userId), // Use the user ID from the cookie
+      },
+      select: { id: true },
+    });
 
-    const [newTournament] = await sql`
-      INSERT INTO tournaments (
-        tournament_type_id, 
-        deck_id, 
-        date, 
-        cost, 
-        wins, 
-        losses, 
-        prize_play_points, 
-        prize_chests,
-        prize_qps,
-        notes
-      ) 
-      VALUES (
-        ${tournamentTypeId}, 
-        ${deckId}, 
-        ${date}, 
-        ${cost}, 
-        ${wins}, 
-        ${losses}, 
-        ${playPointsWon},
-        ${chestsWon},
-        ${qpsWon}, 
-        ${notes}
-      )
-      RETURNING id
-    `
+    revalidatePath("/tournaments");
+    revalidatePath("/");
 
-    revalidatePath("/tournaments")
-    revalidatePath("/")
-
-    return { success: true, data: newTournament }
+    return { success: true, data: newTournament };
   } catch (error) {
-    console.error("Error creating tournament:", error)
-    return { success: false, error: "Failed to create tournament" }
+    console.error("Error creating tournament:", error);
+    return { success: false, error: "Failed to create tournament" };
   }
 }
 
