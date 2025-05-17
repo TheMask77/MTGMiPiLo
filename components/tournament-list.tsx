@@ -91,9 +91,9 @@ export function TournamentList({ tournaments }: TournamentListProps) {
                 <TableCell>{tournament.deck}</TableCell>
                 <TableCell>{tournament.format}</TableCell>
                 <TableCell>{format(new Date(tournament.date), "MMM d, yyyy")}</TableCell>
-                <TableCell>PP {tournament.cost.toFixed(2)}</TableCell>
+                <TableCell>PP {tournament.cost}</TableCell>
                 <TableCell>{formatResult(tournament.wins, tournament.losses)}</TableCell>
-                <TableCell>PP {tournament.prize_play_points.toFixed(2)}</TableCell>
+                <TableCell>PP {tournament.prize_play_points}</TableCell>
                 <TableCell>
                   <Badge variant={getProfitVariant(tournament.cost, tournament.prize_play_points)}>
                     {getProfitLabel(tournament.cost, tournament.prize_play_points)}
@@ -124,7 +124,7 @@ function getProfitVariant(cost: number, prize: number): "default" | "destructive
 
 function getProfitLabel(cost: number, prize: number): string {
   const profit = calculateProfit(cost, prize)
-  if (profit > 0) return `+PP ${profit.toFixed(2)}`
-  if (profit < 0) return `-PP ${Math.abs(profit).toFixed(2)}`
+  if (profit > 0) return `+PP ${profit}`
+  if (profit < 0) return `-PP ${Math.abs(profit)}`
   return "Break Even"
 }

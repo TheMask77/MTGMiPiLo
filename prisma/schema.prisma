@@ -49,6 +49,8 @@ model tournaments {
   prize_chests       Int?              @default(0)
   prize_qps          Int?              @default(0)
   user_id            Int?
+  team_id             Int?        // Optional: If tournaments are directly tied to teams
+  team                teams?      @relation(fields: [team_id], references: [id], onDelete: SetNull)
   decks              decks?            @relation(fields: [deck_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tournament_types   tournament_types? @relation(fields: [tournament_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user              users?            @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -66,4 +68,15 @@ model users {
   hashed_password String?
   image           String?
   tournaments     tournaments[]
+  team_id     Int?        @unique
+  teams     teams?    @relation(fields: [team_id], references: [id], onDelete: SetNull)
+}
+
+model teams {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updated_at  DateTime    @updatedAt
+  users     users[]
+  tournaments tournaments[]
 }
