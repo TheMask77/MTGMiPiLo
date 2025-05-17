@@ -1,76 +1,71 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-
-type User = {
-  username: string
-  email: string
-}
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { TournamentList } from "@/components/tournament-list"
 
 export default function ProfilePage() {
-  const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch('/api/auth/me')
-
+        const res = await fetch("/api/auth/me");
         if (!res.ok) {
-          throw new Error('You are not authorized to view this page.')
+          throw new Error("Failed to fetch user data");
         }
-
-        const data = await res.json()
-        setUser(data)
-      } catch (err: any) {
-        setError(err.message)
-        router.push('/login')
+        const data = await res.json();
+        setUser(data);
+      } catch (err) {
+        setError(err.message);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchUser()
-  }, [router])
-
-  const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' })
-    router.push('/login')
-  }
+    fetchUser();
+  }, []);
 
   if (loading) {
-    return (
-      <div className="text-center mt-20 text-gray-600">
-        <p>Loading profile...</p>
-      </div>
-    )
+    return <p className="p-4 text-center">Loading...</p>;
+  }
+
+  if (error) {
+    return <p className="p-4 text-center text-red-500">{error}</p>;
+  }
+
+  if (!user) {
+    return <p className="p-4 text-center">No user data available.</p>;
   }
 
   return (
-    <div className="max-w-xl mx-auto mt-10 p-6 border border-gray-200 rounded-lg shadow-sm bg-white">
-      <h1 className="text-3xl font-semibold mb-6 text-gray-800">Your Profile</h1>
+    <div className="p-4 max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Profile</h1>
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold">User Info</h2>
+        <p><strong>Username:</strong> {user.username}</p>
+        <p><strong>Email:</strong> {user.email}</p>
+      </div>
 
-      {error ? (
-        <p className="text-red-600">{error}</p>
-      ) : user ? (
-        <div className="space-y-4 text-gray-700">
-          <div>
-            <p className="text-sm text-gray-500">Username</p>
-            <p className="text-lg font-medium">{user.username}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Email</p>
-            <p className="text-lg font-medium">{user.email}</p>
-          </div>
-
-          <hr className="my-4" />
+      {user.team && (
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold">Team</h2>
+          <p><strong>Team Name:</strong> {user.team.name}</p>
         </div>
-      ) : (
-        <p className="text-gray-500">User data not found.</p>
       )}
+
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold">Tournaments Played</h2>
+        {user.tournaments.length > 0 ? (
+          <CardContent>
+            <TournamentList tournaments={user.tournaments} />
+          </CardContent>
+        ) : (
+          <p>No tournaments played yet.</p>
+        )}
+      </div>
     </div>
-  )
+  );
 }
