@@ -14,6 +14,7 @@ interface Tournament {
   wins: number
   losses: number
   prize_play_points: number
+  player_username?: string
 }
 
 interface RecentTournamentsProps {
@@ -32,6 +33,7 @@ export function RecentTournaments({ tournaments }: RecentTournamentsProps) {
               <CardContent className="p-0">
                 <div className="p-4">
                   <div className="flex items-center justify-between">
+                    <span className="font-semibold">{tournament.player_username || "Unknown"}</span>         
                     <div className="font-medium">{tournament.format} {tournament.type}</div>
                     <Badge variant={getProfitVariant(tournament.cost, tournament.prize_play_points)}>
                       {getProfitLabel(tournament.cost, tournament.prize_play_points)}

@@ -8,31 +8,41 @@ import { cookies } from "next/headers";
 
 export async function getTournaments() {
   try {
-    const tournaments = await sql`
-      SELECT 
-        t.id, 
-        tt.name as type, 
-        d.name as deck, 
-        t.date, 
-        t.cost, 
-        t.wins, 
-        t.losses, 
-        t.prize_play_points,
-        t.prize_chests,
-        t.prize_qps,
-        t.notes,
-        f.name as format
-      FROM tournaments t
-      JOIN tournament_types tt ON t.tournament_type_id = tt.id
-      JOIN decks d ON t.deck_id = d.id
-      JOIN formats f ON d.format_id = f.id
-      ORDER BY t.date DESC
-    `
+    const tournaments = await prisma.tournaments.findMany({
+      orderBy: { date: "desc" },
+      include: {
+        tournament_types: { select: { name: true } },
+        decks: {
+          select: {
+            name: true,
+            formats: { select: { name: true } }
+          }
+        },
+        user: { select: { username: true } },
+      },
+    });
 
-    return { success: true, data: tournaments }
+    // Map the result to match your frontend expectations
+    const mapped = tournaments.map(t => ({
+      id: t.id,
+      type: t.tournament_types?.name ?? "",
+      deck: t.decks?.name ?? "",
+      format: t.decks?.formats?.name ?? "",
+      date: t.date,
+      cost: t.cost,
+      wins: t.wins,
+      losses: t.losses,
+      prize_play_points: t.prize_play_points,
+      prize_chests: t.prize_chests,
+      prize_qps: t.prize_qps,
+      notes: t.notes,
+      player_username: t.user?.username ?? "",
+    }));
+
+    return { success: true, data: mapped };
   } catch (error) {
-    console.error("Error fetching tournaments:", error)
-    return { success: false, error: "Failed to fetch tournaments" }
+    console.error("Error fetching tournaments:", error);
+    return { success: false, error: "Failed to fetch tournaments" };
   }
 }
 
@@ -55,10 +65,14 @@ export async function getTournamentById(id: number) {
         t.notes,
         f.name as format,
         f.id as format_id
+        u.username as player_username,   
+        u.email as player_email
       FROM tournaments t
       JOIN tournament_types tt ON t.tournament_type_id = tt.id
       JOIN decks d ON t.deck_id = d.id
       JOIN formats f ON d.format_id = f.id
+      LEFT JOIN users u ON t.user_id = u.id    
+      ORDER BY t.date DESC
       WHERE t.id = ${id}
     `
 
@@ -68,7 +82,6 @@ export async function getTournamentById(id: number) {
     return { success: false, error: "Failed to fetch tournament" }
   }
 }
-
 
 export async function createTournament(formData: FormData) {
   try {

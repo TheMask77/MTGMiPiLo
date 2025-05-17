@@ -51,7 +51,7 @@ model tournaments {
   user_id            Int?
   decks              decks?            @relation(fields: [deck_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tournament_types   tournament_types? @relation(fields: [tournament_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users              users?            @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user              users?            @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([date], map: "idx_tournaments_date")
   @@index([deck_id], map: "idx_tournaments_deck_id")
