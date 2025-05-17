@@ -48,18 +48,22 @@ model tournaments {
   prize_play_points  Int?              @default(0)
   prize_chests       Int?              @default(0)
   prize_qps          Int?              @default(0)
+  user_id            Int?
   decks              decks?            @relation(fields: [deck_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tournament_types   tournament_types? @relation(fields: [tournament_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user              users?            @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([date], map: "idx_tournaments_date")
   @@index([deck_id], map: "idx_tournaments_deck_id")
+  @@index([user_id], map: "idx_tournaments_user_id")
 }
 
 model users {
-  id              Int     @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
   username        String?
-  email           String  @unique
+  email           String        @unique
   email_verified  String?
   hashed_password String?
   image           String?
+  tournaments     tournaments[]
 }

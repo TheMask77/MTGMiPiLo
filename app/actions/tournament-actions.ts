@@ -3,34 +3,46 @@
 import { sql } from "@/lib/db"
 import { parseResult } from "@/lib/utils"
 import { revalidatePath } from "next/cache"
+import { prisma } from "@/lib/db";
+import { cookies } from "next/headers";
 
 export async function getTournaments() {
   try {
-    const tournaments = await sql`
-      SELECT 
-        t.id, 
-        tt.name as type, 
-        d.name as deck, 
-        t.date, 
-        t.cost, 
-        t.wins, 
-        t.losses, 
-        t.prize_play_points,
-        t.prize_chests,
-        t.prize_qps,
-        t.notes,
-        f.name as format
-      FROM tournaments t
-      JOIN tournament_types tt ON t.tournament_type_id = tt.id
-      JOIN decks d ON t.deck_id = d.id
-      JOIN formats f ON d.format_id = f.id
-      ORDER BY t.date DESC
-    `
+    const tournaments = await prisma.tournaments.findMany({
+      orderBy: { date: "desc" },
+      include: {
+        tournament_types: { select: { name: true } },
+        decks: {
+          select: {
+            name: true,
+            formats: { select: { name: true } }
+          }
+        },
+        user: { select: { username: true } },
+      },
+    });
 
-    return { success: true, data: tournaments }
+    // Map the result to match your frontend expectations
+    const mapped = tournaments.map(t => ({
+      id: t.id,
+      type: t.tournament_types?.name ?? "",
+      deck: t.decks?.name ?? "",
+      format: t.decks?.formats?.name ?? "",
+      date: t.date,
+      cost: t.cost,
+      wins: t.wins,
+      losses: t.losses,
+      prize_play_points: t.prize_play_points,
+      prize_chests: t.prize_chests,
+      prize_qps: t.prize_qps,
+      notes: t.notes,
+      player_username: t.user?.username ?? "",
+    }));
+
+    return { success: true, data: mapped };
   } catch (error) {
-    console.error("Error fetching tournaments:", error)
-    return { success: false, error: "Failed to fetch tournaments" }
+    console.error("Error fetching tournaments:", error);
+    return { success: false, error: "Failed to fetch tournaments" };
   }
 }
 
@@ -53,10 +65,14 @@ export async function getTournamentById(id: number) {
         t.notes,
         f.name as format,
         f.id as format_id
+        u.username as player_username,   
+        u.email as player_email
       FROM tournaments t
       JOIN tournament_types tt ON t.tournament_type_id = tt.id
       JOIN decks d ON t.deck_id = d.id
       JOIN formats f ON d.format_id = f.id
+      LEFT JOIN users u ON t.user_id = u.id    
+      ORDER BY t.date DESC
       WHERE t.id = ${id}
     `
 
@@ -67,70 +83,60 @@ export async function getTournamentById(id: number) {
   }
 }
 
-
 export async function createTournament(formData: FormData) {
   try {
-    console.log("Form Data:", formData)
-    const tournamentTypeId = Number.parseInt(formData.get("type") as string)
-    const deckId = Number.parseInt(formData.get("deck") as string)
-    const date = formData.get("date") as string
+    // Get user ID from cookie
+    const cookieStore = await cookies();
+    const userId = cookieStore.get("user_id")?.value;
+    if (!userId) {
+      return { success: false, error: "Not authenticated" };
+    }
 
-    // Handle cost and currency
-    const rawCost = formData.get("cost") as string
+    // Parse form data as before
+    const tournamentTypeId = Number.parseInt(formData.get("type") as string);
+    const deckId = Number.parseInt(formData.get("deck") as string);
+    const date = formData.get("date") as string;
+    const result = formData.get("result") as string;
+    const { wins, losses } = parseResult(result);
 
-    // Result parsing and prize logic
-    const result = formData.get("result") as string
-    const { wins, losses } = parseResult(result)
-
-    const typeNameRecord = await sql`
-      SELECT name FROM tournament_types WHERE id = ${tournamentTypeId}
-    `
-    const typeName = typeNameRecord[0]?.name || ""
+    const typeNameRecord = await prisma.tournament_types.findUnique({
+      where: { id: tournamentTypeId },
+      select: { name: true },
+    });
+    const typeName = typeNameRecord?.name || "";
 
     const cost = calculateCost(typeName);
-
     const prizes = calculatePrize(typeName, wins, losses);
-    const playPointsWon = prizes?.playPoints || 0
-    const chestsWon = prizes?.chests || 0
-    const qpsWon = prizes?.qps || 0
+    const playPointsWon = prizes?.playPoints || 0;
+    const chestsWon = prizes?.chests || 0;
+    const qpsWon = prizes?.qps || 0;
+    const notes = formData.get("notes") as string;
 
-    const notes = formData.get("notes") as string
+    // Create tournament with Prisma
+    const newTournament = await prisma.tournaments.create({
+      data: {
+        tournament_type_id: tournamentTypeId,
+        deck_id: deckId,
+        date: new Date(date),
+        cost,
+        wins,
+        losses,
+        prize_play_points: playPointsWon,
+        prize_chests: chestsWon,
+        prize_qps: qpsWon,
+        notes,
+        user_id: Number(userId), // Use the user ID from the cookie
+      },
+      select: { id: true },
+    });
 
-    const [newTournament] = await sql`
-      INSERT INTO tournaments (
-        tournament_type_id, 
-        deck_id, 
-        date, 
-        cost, 
-        wins, 
-        losses, 
-        prize_play_points, 
-        prize_chests,
-        prize_qps,
-        notes
-      ) 
-      VALUES (
-        ${tournamentTypeId}, 
-        ${deckId}, 
-        ${date}, 
-        ${cost}, 
-        ${wins}, 
-        ${losses}, 
-        ${playPointsWon},
-        ${chestsWon},
-        ${qpsWon}, 
-        ${notes}
-      )
-      RETURNING id
-    `
+    revalidatePath("/tournaments");
+    revalidatePath("/");
 
-    revalidatePath("/tournaments")
-    revalidatePath("/")
-
-    return { success: true, data: newTournament }
+    return { success: true, data: newTournament };
   } catch (error) {
-    console.error("Error creating tournament:", error)
-    return { success: false, error: "Failed to create tournament" }
+    console.error("Error creating tournament:", error);
+    return { success: false, error: "Failed to create tournament" };
   }
 }
 

@@ -1,14 +1,29 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { usePathname, useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { BarChart3, Home, ListPlus, Swords, Menu, X } from "lucide-react"
+import { BarChart3, Home, ListPlus, Swords, Menu, X, UserCircle } from "lucide-react"
 
 export function Navbar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const router = useRouter()
+
+  useEffect(() => {
+    // Check if user is logged in
+    fetch("/api/auth/me")
+      .then(res => setIsLoggedIn(res.ok))
+      .catch(() => setIsLoggedIn(false))
+  }, [pathname])
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" })
+    setIsLoggedIn(false)
+    router.push("/login")
+  }
 
   const navLinks = (
     <>
@@ -55,9 +70,20 @@ export function Navbar() {
           <nav className="flex items-center space-x-6">
             {navLinks}
           </nav>
-          <Link href="/login">
-            <Button variant="outline" size="sm">Log In</Button>
-          </Link>
+          {isLoggedIn ? (
+            <>
+              <Link href="/profile">
+                <UserCircle className="w-7 h-7 text-primary hover:text-blue-600 transition-colors" />
+              </Link>
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                Logout
+              </Button>
+            </>
+          ) : (
+            <Link href="/login">
+              <Button variant="outline" size="sm">Log In</Button>
+            </Link>
+          )}
         </div>
 
         {/* Mobile menu button */}
@@ -74,9 +100,20 @@ export function Navbar() {
       {isOpen && (
         <div className="md:hidden px-4 pb-4 space-y-2">
           {navLinks}
-          <Link href="/login">
-            <Button variant="outline" className="w-full">Log In</Button>
-          </Link>
+          {isLoggedIn ? (
+            <>
+              <Link href="/profile">
+                <UserCircle className="w-7 h-7 text-primary hover:text-blue-600 transition-colors" />
+              </Link>
+              <Button variant="outline" className="w-full" onClick={handleLogout}>
+                Logout
+              </Button>
+            </>
+          ) : (
+            <Link href="/login">
+              <Button variant="outline" className="w-full">Log In</Button>
+            </Link>
+          )}
         </div>
       )}
     </div>

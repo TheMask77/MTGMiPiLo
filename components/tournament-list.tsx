@@ -20,6 +20,7 @@ interface Tournament {
   prize_play_points: number
   prize_chests: number
   prize_qps: number
+  player_username: string
 }
 
 interface TournamentListProps {
@@ -29,6 +30,7 @@ interface TournamentListProps {
 export function TournamentList({ tournaments }: TournamentListProps) {
   const [sortColumn, setSortColumn] = useState<string>("date")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
+
 
   const sortedTournaments = [...tournaments].sort((a, b) => {
     if (sortColumn === "date") {
@@ -58,6 +60,7 @@ export function TournamentList({ tournaments }: TournamentListProps) {
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>Player</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Deck</TableHead>
             <TableHead>Format</TableHead>
@@ -83,6 +86,7 @@ export function TournamentList({ tournaments }: TournamentListProps) {
           ) : (
             sortedTournaments.map((tournament) => (
               <TableRow key={tournament.id}>
+                <TableCell>{tournament.player_username || "Unknown"}</TableCell>
                 <TableCell>{tournament.type}</TableCell>
                 <TableCell>{tournament.deck}</TableCell>
                 <TableCell>{tournament.format}</TableCell>

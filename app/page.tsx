@@ -26,6 +26,7 @@ export default async function Dashboard() {
         losses: t.losses,
         prize_play_points: Number.parseFloat(t.prize_play_points),
         format: t.format,
+        player_username: t.player_username,
       }))
     : []
 

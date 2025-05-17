@@ -14,13 +14,14 @@ export default async function TournamentsPage() {
         type: t.type,
         deck: t.deck,
         format: t.format,
-        date: t.date,
-        cost: Number.parseFloat(t.cost),
+        date: typeof t.date === "string" ? t.date : t.date.toISOString(),
+        cost: typeof t.cost === "number" ? t.cost : Number(t.cost),
         wins: t.wins,
         losses: t.losses,
-        prize_play_points: Number.parseFloat(t.prize_play_points),
-        prize_chests: Number.parseFloat(t.prize_chests),
-        prize_qps: Number.parseFloat(t.prize_qps),
+        prize_play_points: t.prize_play_points ?? 0,
+        prize_chests: t.prize_chests ?? 0,
+        prize_qps: t.prize_qps ?? 0,
+        player_username: t.player_username,
       }))
     : []
 
