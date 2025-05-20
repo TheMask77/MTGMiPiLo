@@ -68,7 +68,7 @@ model users {
   hashed_password String?
   image           String?
   tournaments     tournaments[]
-  team_id     Int?        @unique
+  team_id     Int?
   team     teams?    @relation(fields: [team_id], references: [id], onDelete: SetNull)
 }
 

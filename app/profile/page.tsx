@@ -7,6 +7,7 @@ import { getUserTournaments } from "../actions/tournament-actions";
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
+  const [teammates, setTeammates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -20,6 +21,15 @@ export default function ProfilePage() {
         const data = await res.json();
         console.log("Fetched user data:", data); 
         setUser(data);
+
+        if (data.team) {
+          const teammatesRes = await fetch("/api/teams/teammates");
+          if (!teammatesRes.ok) {
+            throw new Error("Failed to fetch teammates");
+          }
+          const teammatesData = await teammatesRes.json();
+          setTeammates(teammatesData);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -57,6 +67,19 @@ export default function ProfilePage() {
         <div className="mb-6">
           <h2 className="text-xl font-semibold">Team</h2>
           <p><strong>Team Name:</strong> {user.team.name}</p>
+
+          {teammates.length > 0 ? (
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold">Teammates</h3>
+              <ul className="list-disc list-inside">
+                {teammates.map((teammate) => (
+                  <li key={teammate.id}>{teammate.username}</li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="mt-4">No teammates found.</p>
+          )}
         </div>
       )}
 
