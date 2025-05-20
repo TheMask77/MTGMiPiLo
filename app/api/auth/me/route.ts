@@ -14,6 +14,7 @@ export async function GET() {
   const user = await prisma.users.findUnique({
     where: { id: Number(userId) },
     include: {
+      team: { select: { id: true, name: true } },
       tournaments: {
         select: {
           id: true,
@@ -41,7 +42,7 @@ export async function GET() {
     id: user.id,
     username: user.username,
     email: user.email,
-    team: user.team_id, 
+    team: user.team ? { id: user.team.id, name: user.team.name } : null, // Include full team object
     tournaments: user.tournaments,
   });
 }

@@ -6,6 +6,7 @@ import { TournamentList } from "@/components/tournament-list"
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
+  console.log("At the beginning of profilepage user is:", user);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 

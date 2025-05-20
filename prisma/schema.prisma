@@ -69,7 +69,7 @@ model users {
   image           String?
   tournaments     tournaments[]
   team_id     Int?        @unique
-  teams     teams?    @relation(fields: [team_id], references: [id], onDelete: SetNull)
+  team     teams?    @relation(fields: [team_id], references: [id], onDelete: SetNull)
 }
 
 model teams {
