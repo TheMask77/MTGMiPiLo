@@ -46,6 +46,90 @@ export async function getTournaments() {
   }
 }
 
+export async function getUserTournaments(userId: number) {
+  try {
+    const tournaments = await prisma.tournaments.findMany({
+      where: { user_id: userId }, // Filter by user ID
+      orderBy: { date: "desc" }, // Order by date (most recent first)
+      include: {
+        tournament_types: { select: { name: true } }, // Include tournament type name
+        decks: {
+          select: {
+            name: true,
+            formats: { select: { name: true } }, // Include deck format
+          },
+        },
+      },
+    });
+
+    // Map the result to match your frontend expectations
+    const mapped = tournaments.map((t) => ({
+      id: t.id,
+      type: t.tournament_types?.name ?? "",
+      deck: t.decks?.name ?? "",
+      format: t.decks?.formats?.name ?? "",
+      date: t.date,
+      cost: t.cost,
+      wins: t.wins,
+      losses: t.losses,
+      prize_play_points: t.prize_play_points,
+      prize_chests: t.prize_chests,
+      prize_qps: t.prize_qps,
+      notes: t.notes,
+    }));
+
+    return { success: true, data: mapped };
+  } catch (error) {
+    console.error("Error fetching user tournaments:", error);
+    return { success: false, error: "Failed to fetch user tournaments" };
+  }
+}
+
+export async function getTeamTournaments(teamId: number) {
+  try {
+    const tournaments = await prisma.tournaments.findMany({
+      where: {
+        user: {
+          team_id: teamId, // Filter by team ID
+        },
+      },
+      orderBy: { date: "desc" }, // Order by date (most recent first)
+      include: {
+        tournament_types: { select: { name: true } }, // Include tournament type name
+        decks: {
+          select: {
+            name: true,
+            formats: { select: { name: true } }, // Include deck format
+          },
+        },
+        user: { select: { username: true } }, // Include the username of the player
+      },
+    });
+
+    // Map the result to match your frontend expectations
+    const mapped = tournaments.map((t) => ({
+      id: t.id,
+      type: t.tournament_types?.name ?? "",
+      deck: t.decks?.name ?? "",
+      format: t.decks?.formats?.name ?? "",
+      date: t.date,
+      cost: t.cost,
+      wins: t.wins,
+      losses: t.losses,
+      prize_play_points: t.prize_play_points,
+      prize_chests: t.prize_chests,
+      prize_qps: t.prize_qps,
+      notes: t.notes,
+      player_username: t.user?.username ?? "Unknown", // Include the player's username
+    }));
+
+    return { success: true, data: mapped };
+  } catch (error) {
+    console.error("Error fetching team tournaments:", error);
+    return { success: false, error: "Failed to fetch team tournaments" };
+  }
+}
+
 export async function getTournamentById(id: number) {
   try {
     const [tournament] = await sql`

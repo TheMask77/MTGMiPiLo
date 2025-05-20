@@ -26,8 +26,10 @@ export async function GET() {
           prize_chests: true,
           prize_qps: true,
           notes: true,
-          decks: { select: { name: true } },
+          decks: { select: { name: true, formats: true } },
           tournament_types: { select: { name: true } },
+          team: { select: { id: true, name: true } },
+          user: { select: { id: true, username: true } },
         },
         orderBy: { date: "desc" },
       },
@@ -37,12 +39,25 @@ export async function GET() {
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
-
   return NextResponse.json({
     id: user.id,
     username: user.username,
     email: user.email,
-    team: user.team ? { id: user.team.id, name: user.team.name } : null, // Include full team object
-    tournaments: user.tournaments,
+    team: user.team ? { id: user.team.id, name: user.team.name } : null,
+    tournaments: user.tournaments.map((t) => ({
+      id: t.id,
+      type: t.tournament_types?.name ?? "",
+      deck: t.decks?.name ?? "",
+      format: t.decks?.formats?.name ?? "",
+      date: t.date,
+      cost: t.cost,
+      wins: t.wins,
+      losses: t.losses,
+      prize_play_points: t.prize_play_points,
+      prize_chests: t.prize_chests,
+      prize_qps: t.prize_qps,
+      notes: t.notes,
+      player_username: t.user?.username ?? "Unknown",
+    })),
   });
 }

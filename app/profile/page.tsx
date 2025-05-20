@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TournamentList } from "@/components/tournament-list"
+import { getUserTournaments } from "../actions/tournament-actions";
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
-  console.log("At the beginning of profilepage user is:", user);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -18,6 +18,7 @@ export default function ProfilePage() {
           throw new Error("Failed to fetch user data");
         }
         const data = await res.json();
+        console.log("Fetched user data:", data); 
         setUser(data);
       } catch (err) {
         setError(err.message);
@@ -40,6 +41,8 @@ export default function ProfilePage() {
   if (!user) {
     return <p className="p-4 text-center">No user data available.</p>;
   }
+
+  console.log("User data fetched:", user);
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
