@@ -40,6 +40,27 @@ export default function ProfilePage() {
     fetchUser();
   }, []);
 
+  const handleLeaveTeam = async () => {
+    try {
+      const res = await fetch("/api/teams/leave", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to leave the team");
+      }
+
+      // Update the user state to reflect that they are no longer in a team
+      setUser((prevUser) => ({ ...prevUser, team: null }));
+      setTeammates([]);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   if (loading) {
     return <p className="p-4 text-center">Loading...</p>;
   }
@@ -90,6 +111,14 @@ export default function ProfilePage() {
           ) : (
             <p className="mt-4">No teammates found.</p>
           )}
+
+          <button
+            onClick={handleLeaveTeam}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Leave Team
+          </button>
+
         </div>
       )}
 
